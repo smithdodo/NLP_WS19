@@ -1,0 +1,17 @@
+a)
+ sentences mean: 28.190896666666667, variance: 291.8349484626555
+ words mean: 4.866916678844433, variance: 8.139043363701868
+
+b)
+ Both word lenghts and sentence lengths are not normally distributed.
+
+c)
+The result of tokenization affects the model that we would trained with the dataset.
+In tokenizer script we must consider many cases when we extract words from the data. Some cases are:
+ 
+ 1. floating point numbers like 99.88, are they a word or two?
+ 2. dates like 1.30 or 1.30.2019, are they a word or multiple words.
+ 3. IDs like B5-0501, if we consider it to be a word, we must not remove the '-' while preprocessing.
+ 4. We must not only consider ascii characters, but also other characters which form words. Such as é, è, ä, etc.
+ 5. Not all punctuations are surrounded by spaces on each side. In the data we see punctuations that start at first or last char of the line.
+ 
