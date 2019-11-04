@@ -1,7 +1,6 @@
 from collections import namedtuple, Counter
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
 
 
 
@@ -23,7 +22,11 @@ def get_voc(size):
     with open(voc_path, 'r') as f:
         all_vocs = [w.strip() for w in f.read().split('\n')]
         limit = size if size < len(all_vocs) else len(all_vocs)
-        voc = {v.strip():0 for v in all_vocs[:limit]}
+        # ===============(c)======================
+        # Here is the modification. We simply ensure that each word in the voc occur
+        # at least onces in each document
+        # =====================================
+        voc = {v.strip():1 for v in all_vocs[:limit]}
     return voc
 
 
@@ -60,7 +63,7 @@ def get_p_w_c(dataset, vocabulary):
     for x in dataset:
         class_, doc_length, frequencies = x
         if class_ not in p_w_c:
-            p_w_c[class_] = {'voc': vocabulary.copy(), 'doc_length': 0}
+            p_w_c[class_] = {'voc': vocabulary.copy(), 'doc_length': len(vocabulary.keys())}
         p_w_c[class_]['doc_length'] += doc_length
 
         for freq in frequencies:
@@ -70,6 +73,11 @@ def get_p_w_c(dataset, vocabulary):
 
     for class_, item in p_w_c.items():
         # convert word count to relative frequency
+        # ====================================(c)================================
+        # Since we manually add 1 occurrence for each word in each document.
+        # In order to normalize the relative word frequence, we must consider the document length as:
+        # original_length + num_vocabulary
+        # =========================================================================
         p_w_c[class_]['voc'] = {word: count/item['doc_length'] for word, count in item['voc'].items()}
     
     return p_w_c
@@ -97,11 +105,6 @@ def get_class_posterior(class_, word_frequencies, pc, p_w_c):
     """
     global b
     a = pc[class_] * np.prod([p_w_c[class_]['voc'][word] ** count for word, _, count in word_frequencies])
-    # There are cases where the denominators are zero.
-    # the reason for that is for the given input sentence, there are always classes that didn't contains at least one
-    # of the word in the input while training. 
-    # As a result, for each class c there is always a w from the input sentence so that p(w|c) = 0. This makes
-    # the denominator to be zero.
     b = np.sum([
         pc[c] * np.prod([p_w_c[c]['voc'][word] ** count for word, _, count in word_frequencies])
         for c in pc.keys()
@@ -143,11 +146,11 @@ def plot():
     plt.ylabel('error rate')
     plt.xlabel('voc size')
     plt.plot(xs, ys)
-    plt.savefig(f'plt_{max_voc}.png')
+    plt.savefig(f'plt_{max_voc}_fixed.png')
     plt.show()
 
 # ploat b)
-# plot()
+plot()
 
 # d)
 def confusion_matrix():
@@ -175,15 +178,13 @@ def confusion_matrix():
     for i in range(len(df)):
         false_positives.append(1 - df.iloc[i, i+1] / df.iloc[i,1:].values.sum())
     df.insert(1, 'false_positive', false_positives)
-    df.to_csv('confusion_matrix.csv')
     print(df)
     return df
-# d)
-# confusion_matrix()
+# m = confusion_matrix()
 
 
-# e)
 def spam():
+    global b
     b = 0
     voc = get_voc(400)
     pc, p_w_c = train('spam/spam.tr', voc)
@@ -191,4 +192,6 @@ def spam():
     predictions = [(ts.c, predict(ts.N_w, pc, p_w_c)) for ts in test_set]
     error_rate = len([None for x in predictions if x[0] != x[1]]) / len(test_set)
     print('spam classifier error rate:', error_rate)
+
+# e)
 spam()
