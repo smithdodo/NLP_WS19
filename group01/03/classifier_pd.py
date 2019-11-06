@@ -54,7 +54,7 @@ def train(df):
 
 def predict(word_counts, p_w_c, prior):
     """
-    return argmax_c{p(c)p(w|c)}
+    return argmax_c{p(c)mul_w{p(w|c)^N_w}}
     """
     best_class, best_val = "", 0
     for class_, row in p_w_c.iterrows():
