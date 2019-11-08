@@ -23,15 +23,11 @@ def read_training_data(text_path, voc):
                 if word in row:
                     row[word] += int(count)
                 else:
-                    row['<UNK>'] += 1
+                    row['<UNK>'] += int(count)
             rows.append(row)
 
     df = pd.DataFrame(rows)
-    # put class_name on first col
-    cols = df.columns.tolist()
-    cols.remove('class_name')
-    cols.insert(0, 'class_name')
-    df = df[cols]
+    df = df.set_index('class_name')
     return df
 
 
@@ -39,30 +35,31 @@ def train(df):
     """
     Return log likelyhood p(w|c) and prior p(c)
     """
-    # p(c)
-    pc = pd.DataFrame([{k: v/len(df) for k, v in Counter(df['class_name']).items()}])
+    # log p(c)
+    pc = np.log10(pd.DataFrame([{k: v/len(df) for k, v in Counter(df.index).items()}]))
 
     # convert word counts to relative freq
-    df['length'] = df.iloc[:, 1:-1].sum(axis=1)
     df = df.groupby('class_name').sum()
     # log p(w|c)
-    df = np.log10(df.iloc[:, 0:-1].div(df['length'], axis=0))
+    df = np.log10(df.div(df.values.sum(axis=1), axis=0))
+
+    df.replace([np.inf, -np.inf], np.nan)
+    del df['<UNK>']
 
     return df, pc
 
 
 def predict(word_counts, p_w_c, prior):
     """
-    return argmax_c{p(c)mul_w{p(w|c)^N_w}}
+    return argmax_c{log{p(c)} + sum_w{N_w * p(w|c)}}
     """
-    res = (p_w_c.as_matrix() * word_counts).sum(axis=1) * prior.values
+    res = np.nan_to_num(p_w_c.values * word_counts).sum(axis=1) + prior.values
     best_class = prior.columns[res.argmax()]
-    print(best_class)
     return best_class
 
 
 def evaluate():
-    voc = get_voc(1000, '20news/20news.voc')
+    voc = get_voc(500, '20news/20news.voc')
     # p_w_c, prior = train(read_training_data('20news/20news.tr', voc))
     # test = read_training_data('20news/20news.te', voc)
     p_w_c, prior = train(read_training_data('spam/spam.tr', voc))
@@ -70,8 +67,9 @@ def evaluate():
 
     results = []
     for idx, row in test.iterrows():
-        actual = row['class_name']
-        pred = predict(row[1:].values, p_w_c, prior)
+        actual = row.name
+        del row['<UNK>']
+        pred = predict(row.values, p_w_c, prior)
         results.append((actual, pred))
         # print(f'actual: {actual}, pred: {pred}')
 
