@@ -6,7 +6,14 @@ class NGramModel:
     def __init__(self, n):
         self.n = n
 
-        # models[n] are the actual model, others are for backing off
+        # models[self.n] are the actual model, others are for backing off
+        # each model is a dict containing {w: N(h, w)}
+        # assume h = uv
+        # then models = {
+        #   3: {w: N(uv, w)}
+        #   2: {w: N(v, w)}
+        #   1: {w: N(w)}
+        # }
         self.models = {i+1: defaultdict(lambda: defaultdict(int)) for i in range(n)}
         self.models[1] = defaultdict(int)
 
