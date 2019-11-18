@@ -114,7 +114,7 @@ def train_ngram_model(n=2):
     """
     model = NGramModel(n)
     with open('Europal-v9', 'r') as f:
-        cnt = 0
+        # cnt = 0
         sequence = deque(maxlen=n)
 
         print(f'Training {n}-gram model...')
@@ -124,9 +124,9 @@ def train_ngram_model(n=2):
                 sequence.append(word)
                 model.update(list(sequence))
 
-            cnt += 1
-            if cnt >= 10000:
-                break
+            # cnt += 1
+            # if cnt >= 10000:
+            #     break
 
         print(f'Training finished')
     return model
