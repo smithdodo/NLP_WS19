@@ -190,7 +190,6 @@ def get_sentence(model, start=['I'], length=20, discounting_method=absolute_disc
             (w, discounting_method(model, list(h), w, N_h, coc_h, b_h, sum_beta)) 
             for w in model.vocabulary
         ]
-        import ipdb; ipdb.set_trace()
         probs = [(w, prob) for w, prob in probs if prob > 0]
         probs.sort(key=lambda x: x[1])
 
