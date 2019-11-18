@@ -114,7 +114,7 @@ def train_ngram_model(n=2):
     """
     model = NGramModel(n)
     with open('Europal-v9', 'r') as f:
-        # cnt = 0
+        cnt = 0
         sequence = deque(maxlen=n)
 
         print(f'Training {n}-gram model...')
@@ -124,9 +124,9 @@ def train_ngram_model(n=2):
                 sequence.append(word)
                 model.update(list(sequence))
 
-            # cnt += 1
-            # if cnt >= 10000:
-            #     break
+            cnt += 1
+            if cnt >= 10000:
+                break
 
         print(f'Training finished')
     return model
@@ -156,7 +156,7 @@ def absolute_discounting(model, h, w, N_h, coc_h, b_h, sum_beta):
     N_hw = model.N_h_w(h, w)
     W = model.vocabulary_size()
 
-    if N_hw > 1:
+    if N_hw > 0:
         return (N_hw - b_h) / N_h
 
     beta_hw = N_hw / N_h
@@ -190,6 +190,7 @@ def get_sentence(model, start=['I'], length=20, discounting_method=absolute_disc
             (w, discounting_method(model, list(h), w, N_h, coc_h, b_h, sum_beta)) 
             for w in model.vocabulary
         ]
+        import ipdb; ipdb.set_trace()
         probs = [(w, prob) for w, prob in probs if prob > 0]
         probs.sort(key=lambda x: x[1])
 
