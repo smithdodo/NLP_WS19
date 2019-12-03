@@ -56,7 +56,7 @@ def laplace_smoothing(bigram_pos, p_w_given_g, tags, vocabulary):
         for tag in tags:
             p_w_given_g[(w, tag)] += 0
 
-    alpha = 0.4
+    alpha = 0.05
 
     bigram_pos = pd.DataFrame(
         [[*k, v] for k, v in bigram_pos.items()], 
